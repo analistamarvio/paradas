@@ -1,0 +1,5 @@
+/* realça os tiles */
+.bg-success-subtle { background-color: #d1f7d9 !important; } /* verde claro */
+.bg-danger-subtle  { background-color: #ffd6d6 !important; } /* vermelho claro */
+
+.tile-btn:hover { filter: brightness(0.96); }

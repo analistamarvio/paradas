@@ -1,0 +1,242 @@
+[
+  {
+    "tear": 1,
+    "data_hora": "2025-10-17T16:53:00-03:00",
+    "status": 0,
+    "hora_registro": "2025-10-17T16:53:42.003971-03:00",
+    "motivo": 1,
+    "turno": 2
+  },
+  {
+    "tear": 5,
+    "data_hora": "2025-10-17T16:53:00-03:00",
+    "status": 0,
+    "hora_registro": "2025-10-17T16:53:46.873053-03:00",
+    "motivo": 204,
+    "turno": 2
+  },
+  {
+    "tear": 3,
+    "data_hora": "2025-10-17T16:53:00-03:00",
+    "status": 0,
+    "hora_registro": "2025-10-17T16:53:51.355960-03:00",
+    "motivo": 140,
+    "turno": 2
+  },
+  {
+    "tear": 2,
+    "data_hora": "2025-10-17T17:42:00-03:00",
+    "status": 0,
+    "hora_registro": "2025-10-17T17:42:33.363828-03:00",
+    "motivo": 1,
+    "turno": 2
+  },
+  {
+    "tear": 1,
+    "data_hora": "2025-10-17T18:56:00-03:00",
+    "status": 1,
+    "hora_registro": "2025-10-17T18:56:30.158424-03:00",
+    "motivo": null,
+    "turno": 2
+  },
+  {
+    "tear": 4,
+    "data_hora": "2025-10-17T18:56:00-03:00",
+    "status": 0,
+    "hora_registro": "2025-10-17T18:56:40.209802-03:00",
+    "motivo": 305,
+    "turno": 2
+  },
+  {
+    "tear": 2,
+    "data_hora": "2025-10-21T12:19:00-03:00",
+    "status": 1,
+    "hora_registro": "2025-10-21T12:19:54.092452-03:00",
+    "motivo": null,
+    "turno": 1
+  },
+  {
+    "tear": 3,
+    "data_hora": "2025-10-21T12:19:00-03:00",
+    "status": 1,
+    "hora_registro": "2025-10-21T12:19:55.608178-03:00",
+    "motivo": null,
+    "turno": 1
+  },
+  {
+    "tear": 4,
+    "data_hora": "2025-10-21T12:19:00-03:00",
+    "status": 1,
+    "hora_registro": "2025-10-21T12:19:56.767476-03:00",
+    "motivo": null,
+    "turno": 1
+  },
+  {
+    "tear": 5,
+    "data_hora": "2025-10-21T12:19:00-03:00",
+    "status": 1,
+    "hora_registro": "2025-10-21T12:19:58.168982-03:00",
+    "motivo": null,
+    "turno": 1
+  },
+  {
+    "tear": 6,
+    "data_hora": "2025-10-21T12:19:00-03:00",
+    "status": 0,
+    "hora_registro": "2025-10-21T12:20:03.681659-03:00",
+    "motivo": 103,
+    "turno": 1
+  },
+  {
+    "tear": 1,
+    "data_hora": "2025-10-21T12:20:00-03:00",
+    "status": 0,
+    "hora_registro": "2025-10-21T12:20:07.080427-03:00",
+    "motivo": 103,
+    "turno": 1
+  },
+  {
+    "tear": 1,
+    "data_hora": "2025-10-21T20:28:00-03:00",
+    "status": 1,
+    "hora_registro": "2025-10-21T20:28:09.750759-03:00",
+    "motivo": null,
+    "turno": 2
+  },
+  {
+    "tear": 2,
+    "data_hora": "2025-10-21T20:28:00-03:00",
+    "status": 0,
+    "hora_registro": "2025-10-21T20:28:13.128117-03:00",
+    "motivo": 120,
+    "turno": 2
+  },
+  {
+    "tear": 3,
+    "data_hora": "2025-10-21T20:28:00-03:00",
+    "status": 0,
+    "hora_registro": "2025-10-21T20:28:17.806058-03:00",
+    "motivo": 120,
+    "turno": 2
+  },
+  {
+    "tear": 4,
+    "data_hora": "2025-10-21T20:28:00-03:00",
+    "status": 0,
+    "hora_registro": "2025-10-21T20:28:20.703308-03:00",
+    "motivo": 140,
+    "turno": 2
+  },
+  {
+    "tear": 5,
+    "data_hora": "2025-10-21T20:28:00-03:00",
+    "status": 0,
+    "hora_registro": "2025-10-21T20:28:23.745722-03:00",
+    "motivo": 305,
+    "turno": 2
+  },
+  {
+    "tear": 6,
+    "data_hora": "2025-10-21T20:28:00-03:00",
+    "status": 1,
+    "hora_registro": "2025-10-21T20:28:26.476493-03:00",
+    "motivo": null,
+    "turno": 2
+  },
+  {
+    "tear": 2,
+    "data_hora": "2025-10-21T21:33:00-03:00",
+    "status": 1,
+    "hora_registro": "2025-10-21T21:33:19.985200-03:00",
+    "motivo": null,
+    "turno": 2
+  },
+  {
+    "tear": 3,
+    "data_hora": "2025-10-21T21:52:00-03:00",
+    "status": 1,
+    "hora_registro": "2025-10-21T21:52:48.819631-03:00",
+    "motivo": null,
+    "turno": 2
+  },
+  {
+    "tear": 6,
+    "data_hora": "2025-10-21T21:52:00-03:00",
+    "status": 0,
+    "hora_registro": "2025-10-21T21:52:53.380024-03:00",
+    "motivo": 103,
+    "turno": 2
+  },
+  {
+    "tear": 5,
+    "data_hora": "2025-10-21T21:52:00-03:00",
+    "status": 1,
+    "hora_registro": "2025-10-21T21:52:55.501382-03:00",
+    "motivo": null,
+    "turno": 2
+  },
+  {
+    "tear": 4,
+    "data_hora": "2025-10-21T21:52:00-03:00",
+    "status": 1,
+    "hora_registro": "2025-10-21T21:52:57.131731-03:00",
+    "motivo": null,
+    "turno": 2
+  },
+  {
+    "tear": 1,
+    "data_hora": "2025-10-21T21:52:00-03:00",
+    "status": 0,
+    "hora_registro": "2025-10-21T21:53:01.739052-03:00",
+    "motivo": 120,
+    "turno": 2
+  },
+  {
+    "tear": 2,
+    "data_hora": "2025-10-21T21:53:00-03:00",
+    "status": 0,
+    "hora_registro": "2025-10-21T21:53:06.754701-03:00",
+    "motivo": 305,
+    "turno": 2
+  },
+  {
+    "tear": 1,
+    "data_hora": "2025-10-21T22:23:00-03:00",
+    "status": 1,
+    "hora_registro": "2025-10-21T22:23:42.762747-03:00",
+    "motivo": null,
+    "turno": 3
+  },
+  {
+    "tear": 1,
+    "data_hora": "2025-10-21T22:28:00-03:00",
+    "status": 0,
+    "hora_registro": "2025-10-21T22:28:43.233719-03:00",
+    "motivo": 120,
+    "turno": 3
+  },
+  {
+    "tear": 1,
+    "data_hora": "2025-10-21T22:29:00-03:00",
+    "status": 1,
+    "hora_registro": "2025-10-21T22:29:41.680552-03:00",
+    "motivo": null,
+    "turno": 3
+  },
+  {
+    "tear": 2,
+    "data_hora": "2025-10-21T22:29:00-03:00",
+    "status": 1,
+    "hora_registro": "2025-10-21T22:29:58.956502-03:00",
+    "motivo": null,
+    "turno": 3
+  },
+  {
+    "tear": 3,
+    "data_hora": "2025-10-21T22:30:00-03:00",
+    "status": 0,
+    "hora_registro": "2025-10-21T22:30:09.567534-03:00",
+    "motivo": 120,
+    "turno": 3
+  }
+]

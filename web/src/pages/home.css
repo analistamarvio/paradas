@@ -1,0 +1,17 @@
+:root { --gap: 1rem; }
+
+.tile {
+  display: block;
+  height: calc((100vh - (var(--gap) * 4)) / 3);
+  width: 100%;
+  border: 1px solid #d1d5db;
+}
+.tile-main   { background: #3d65e9; } /* verde */
+.tile-accent { background: #374985; } /* verde-lima */
+.tile:hover { filter: brightness(0.96); }
+
+.tile-text {
+  font-size: clamp(1.8rem, 4.5vw, 3rem);
+  color: #ffffff;
+  font-weight: 700;
+}

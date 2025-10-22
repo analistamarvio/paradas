@@ -1,0 +1,128 @@
+[
+  {
+    "turno": 2,
+    "dia_semana": 1,
+    "inicio": "13:30",
+    "fim": "22:00"
+  },
+  {
+    "turno": 3,
+    "dia_semana": 1,
+    "inicio": "22:00",
+    "fim": "05:00"
+  },
+  {
+    "turno": 1,
+    "dia_semana": 2,
+    "inicio": "05:00",
+    "fim": "13:30"
+  },
+  {
+    "turno": 2,
+    "dia_semana": 2,
+    "inicio": "13:30",
+    "fim": "22:00"
+  },
+  {
+    "turno": 3,
+    "dia_semana": 2,
+    "inicio": "22:00",
+    "fim": "05:00"
+  },
+  {
+    "turno": 1,
+    "dia_semana": 3,
+    "inicio": "05:00",
+    "fim": "13:30"
+  },
+  {
+    "turno": 2,
+    "dia_semana": 3,
+    "inicio": "13:30",
+    "fim": "22:00"
+  },
+  {
+    "turno": 3,
+    "dia_semana": 3,
+    "inicio": "22:00",
+    "fim": "05:00"
+  },
+  {
+    "turno": 1,
+    "dia_semana": 4,
+    "inicio": "05:00",
+    "fim": "13:30"
+  },
+  {
+    "turno": 2,
+    "dia_semana": 4,
+    "inicio": "13:30",
+    "fim": "22:00"
+  },
+  {
+    "turno": 3,
+    "dia_semana": 4,
+    "inicio": "22:00",
+    "fim": "05:00"
+  },
+  {
+    "turno": 1,
+    "dia_semana": 5,
+    "inicio": "05:00",
+    "fim": "13:30"
+  },
+  {
+    "turno": 2,
+    "dia_semana": 5,
+    "inicio": "13:30",
+    "fim": "22:00"
+  },
+  {
+    "turno": 3,
+    "dia_semana": 5,
+    "inicio": "22:00",
+    "fim": "05:00"
+  },
+  {
+    "turno": 1,
+    "dia_semana": 6,
+    "inicio": "05:00",
+    "fim": "13:30"
+  },
+  {
+    "turno": 2,
+    "dia_semana": 6,
+    "inicio": "13:30",
+    "fim": "22:00"
+  },
+  {
+    "turno": 3,
+    "dia_semana": 6,
+    "inicio": "22:00",
+    "fim": "05:00"
+  },
+  {
+    "turno": 1,
+    "dia_semana": 7,
+    "inicio": "05:00",
+    "fim": "13:30"
+  },
+  {
+    "turno": 2,
+    "dia_semana": 7,
+    "inicio": "13:30",
+    "fim": "22:00"
+  },
+  {
+    "turno": 3,
+    "dia_semana": 7,
+    "inicio": "22:00",
+    "fim": "05:00"
+  },
+  {
+    "turno": 1,
+    "dia_semana": 1,
+    "inicio": "05:00",
+    "fim": "13:30"
+  }
+]

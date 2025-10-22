@@ -1,0 +1,38 @@
+[
+  {
+    "cod": 1,
+    "nome": "admin",
+    "senha_hash": "7a55dca57ac1f3a56b91aa5d36115301df7c8e1b397371b0edd9fa8a04fd6b37",
+    "role": 6
+  },
+  {
+    "cod": 2,
+    "nome": "Jean",
+    "senha_hash": "7a55dca57ac1f3a56b91aa5d36115301df7c8e1b397371b0edd9fa8a04fd6b37",
+    "role": 4
+  },
+  {
+    "cod": 3,
+    "nome": "Alexandre",
+    "senha_hash": "7a55dca57ac1f3a56b91aa5d36115301df7c8e1b397371b0edd9fa8a04fd6b37",
+    "role": 5
+  },
+  {
+    "cod": 4,
+    "nome": "Lider1turno",
+    "senha_hash": "7a55dca57ac1f3a56b91aa5d36115301df7c8e1b397371b0edd9fa8a04fd6b37",
+    "role": 1
+  },
+  {
+    "cod": 5,
+    "nome": "Lider2Turno",
+    "senha_hash": "7a55dca57ac1f3a56b91aa5d36115301df7c8e1b397371b0edd9fa8a04fd6b37",
+    "role": 2
+  },
+  {
+    "cod": 6,
+    "nome": "Lider3Turno",
+    "senha_hash": "7a55dca57ac1f3a56b91aa5d36115301df7c8e1b397371b0edd9fa8a04fd6b37",
+    "role": 3
+  }
+]

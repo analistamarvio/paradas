@@ -1,0 +1,26 @@
+[
+  {
+    "codigo": 103,
+    "descricao": "Manutenção Programada"
+  },
+  {
+    "codigo": 204,
+    "descricao": "Falta programação"
+  },
+  {
+    "codigo": 120,
+    "descricao": "Falta de Material"
+  },
+  {
+    "codigo": 140,
+    "descricao": "Falta de operadores"
+  },
+  {
+    "codigo": 305,
+    "descricao": "Falta de energia"
+  },
+  {
+    "codigo": 1,
+    "descricao": "Horário de Lanche"
+  }
+]
