@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4 p-3 rounded" style="background:#0a3d62; color:#fff;">
+  <h2 class="mb-0 fw-bold text-uppercase">RELATÓRIO 2º TURNO DE HORAS PARADAS E FUNCIONANDO</h2>
+  <a class="btn btn-lg fw-bold" href="{{ url_for('dashboard') }}" style="background:#0a3d62; color:#fff; border:2px solid #fff;">Voltar</a>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <form class="row gy-3" method="get" action="{{ url_for('relatorio_segundo_turno') }}" id="reportFilters">
+      <div class="col-12 col-md-3">
+        <label class="form-label fw-semibold">Data inicio</label>
+        <input type="date" class="form-control" name="start_date" value="{{ start_date }}">
+      </div>
+      <div class="col-12 col-md-3">
+        <label class="form-label fw-semibold">Data fim</label>
+        <input type="date" class="form-control" name="end_date" value="{{ end_date }}">
+      </div>
+      <div class="col-12 col-md-3">
+        <label class="form-label fw-semibold d-block">Estado</label>
+        <div class="btn-group" role="group" aria-label="Filtro de estado">
+          <input type="radio" class="btn-check" name="status" id="status_working" value="working" {% if status_filter != 'stopped' %}checked{% endif %}>
+          <label class="btn btn-outline-success" for="status_working">Funcionando</label>
+          <input type="radio" class="btn-check" name="status" id="status_stopped" value="stopped" {% if status_filter == 'stopped' %}checked{% endif %}>
+          <label class="btn btn-outline-danger" for="status_stopped">Parado</label>
+        </div>
+      </div>
+      <div class="col-12 col-md-3">
+        <label class="form-label fw-semibold">Turno</label>
+        <input type="text" class="form-control" value="{{ shift_type.name }}" disabled>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label fw-semibold">Tears</label>
+        {% if looms %}
+          <div class="d-flex flex-wrap gap-3">
+            {% for loom in looms %}
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" value="{{ loom.id }}" name="looms" id="loom_{{ loom.id }}" {% if loom.id|string in selected_looms %}checked{% endif %}>
+              <label class="form-check-label" for="loom_{{ loom.id }}">Tear {{ loom.number }}</label>
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="text-danger">Nenhum tear cadastrado.</div>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('reportFilters');
+  if (!form) return;
+  const autosubmit = () => {
+    if (form.requestSubmit) {
+      form.requestSubmit();
+    } else {
+      form.submit();
+    }
+  };
+  const inputs = form.querySelectorAll('input, select');
+  inputs.forEach(el => {
+    el.addEventListener('change', autosubmit);
+  });
+});
+</script>
+
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title mb-3">Resultados</h5>
+    {% if report %}
+    <div class="table-responsive">
+      <table class="table table-sm table-bordered align-middle text-center">
+        <thead class="table-light">
+          <tr>
+            <th class="text-start">Tear</th>
+            {% for d in day_labels %}
+            <th>{{ d }}</th>
+            {% endfor %}
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in report %}
+          <tr>
+            <th class="text-start">Tear {{ row.loom.number }}</th>
+            {% for v in row['values'] %}
+            <td>{% if v %}{{ (v // 60) }}h {{ '%02d' % (v % 60) }}{% else %}-{% endif %}</td>
+            {% endfor %}
+            <th>{% if row.total %}{{ (row.total // 60) }}h {{ '%02d' % (row.total % 60) }}{% else %}-{% endif %}</th>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="table-light">
+          <tr>
+            <th class="text-start">Total</th>
+            {% for minutes_val in column_totals %}
+              <th>{% if minutes_val %}{{ (minutes_val // 60) }}h {{ '%02d' % (minutes_val % 60) }}{% else %}-{% endif %}</th>
+            {% endfor %}
+            <th>{% if grand_total %}{{ (grand_total // 60) }}h {{ '%02d' % (grand_total % 60) }}{% else %}-{% endif %}</th>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <hr class="my-4">
+    <h6 class="mb-3">Mapa de calor (Tear x Dia)</h6>
+    <div id="heatmap" class="heatmap-grid mb-3"></div>
+    {% else %}
+      <p class="text-muted mb-0">Nenhum dado para o período selecionado.</p>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+// Heatmap
+(function() {
+  const container = document.getElementById('heatmap');
+  if (!container) return;
+  const rows = {{ heatmap_data|tojson }};
+  const dayLabels = {{ day_labels|tojson }};
+  if (!rows || !rows.length) return;
+  const values = [];
+  rows.forEach(r => (r.stopped_values || []).forEach(v => values.push(v)));
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const scale = (v) => {
+    if (max === min) return 120;
+    const t = (v - min) / (max - min);
+    return 120 - 120 * t;
+  };
+  const grid = document.createElement('div');
+  grid.className = 'heatmap-grid-inner';
+  grid.appendChild(document.createElement('div'));
+  dayLabels.forEach(d => {
+    const h = document.createElement('div');
+    h.className = 'heatmap-header';
+    h.textContent = d;
+    grid.appendChild(h);
+  });
+  rows.forEach(r => {
+    const label = document.createElement('div');
+    label.className = 'heatmap-row-label';
+    label.textContent = `Tear ${r.loom_number}`;
+    grid.appendChild(label);
+    const stoppedList = r.stopped_values || [];
+    const runningList = r.running_values || [];
+    stoppedList.forEach((stopped, idx) => {
+      const cell = document.createElement('div');
+      cell.className = 'heatmap-cell';
+      const running = runningList[idx] || 0;
+      stopped = stopped || 0;
+      const isStoppedDominant = stopped >= running;
+      const hue = isStoppedDominant ? 0 : scale(stopped);
+      const bg = `hsl(${hue}, 80%, 50%)`;
+      cell.style.background = bg;
+      const fmt = (m) => `${(m/60|0)}h ${(m%60).toString().padStart(2,'0')}`;
+      const showStopped = stopped >= running;
+      const val = showStopped ? stopped : running;
+      const labelTxt = `${fmt(val)}\n${showStopped ? 'PARADO' : 'LIGADO'}`;
+      cell.title = labelTxt.replace('\n', ' ');
+      cell.innerHTML = labelTxt.replace('\n', '<br>');
+      cell.style.color = '#000';
+      cell.style.fontWeight = '700';
+      grid.appendChild(cell);
+    });
+  });
+  container.appendChild(grid);
+})();
+</script>
+
+<style>
+.heatmap-grid {
+  overflow-x: auto;
+}
+.heatmap-grid-inner {
+  display: grid;
+  grid-template-columns: 120px repeat({{ day_labels|length }}, minmax(70px, 1fr));
+  gap: 4px;
+}
+.heatmap-header,
+.heatmap-row-label,
+.heatmap-cell {
+  padding: 8px;
+  text-align: center;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  color: #111;
+}
+.heatmap-header {
+  font-weight: 600;
+  background: #f5f5f5;
+}
+.heatmap-row-label {
+  font-weight: 600;
+  background: #f0f0f0;
+  position: sticky;
+  left: 0;
+}
+.heatmap-cell {
+  color: #000;
+  font-weight: 700;
+  white-space: pre-line;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-4">
+  <h3 class="fw-bold">Enviar para banco (api.db)</h3>
+  <div class="d-flex align-items-end gap-3 flex-wrap w-100">
+    <form method="get" class="d-flex align-items-end gap-2 flex-grow-1 flex-wrap mb-0">
+      <div class="flex-grow-1">
+        <input class="form-control form-control-lg" style="min-width: 170px;" type="date" name="date" value="{{ selected_date }}" onchange="this.form.submit()">
+      </div>
+    </form>
+
+    <form method="post" class="d-flex align-items-end gap-1 flex-wrap flex-grow-1 mb-0">
+      <input type="hidden" name="date" value="{{ selected_date }}">
+      <div class="btn-group w-100" role="group" aria-label="Enviar por turno">
+        <button type="submit" name="turno_index" value="1" class="btn btn-lg w-100" style="background:#ffe600;color:#333;"
+                {% if not allowed[1] %}disabled{% endif %}>Atualizar 1º turno</button>
+        <button type="submit" name="turno_index" value="2" class="btn btn-lg w-100" style="background:#2c8f3f;color:#fff;"
+                {% if not allowed[2] %}disabled{% endif %}>Atualizar 2º turno</button>
+        <button type="submit" name="turno_index" value="3" class="btn btn-lg w-100" style="background:#e39c00;color:#000;"
+                {% if not allowed[3] %}disabled{% endif %}>Atualizar 3º turno</button>
+      </div>
+    </form>
+
+    <a href="{{ url_for('dashboard_teares') }}" class="btn btn-lg flex-grow-1 text-white" style="background:#0d6efd;">Ir para Paradas</a>
+  </div>
+  <p class="text-muted mt-2 mb-0">Apenas turnos permitidos pelo seu nível ficam habilitados.</p>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-bordered table-sm align-middle text-center">
+    <thead class="table-light">
+      <tr>
+        <th>id_api</th>
+        <th>TEAR</th>
+        <th>HORA INICIO</th>
+        <th>HORA FIM</th>
+        <th>DATA</th>
+        <th>Cod Motivo</th>
+        <th>Motivo</th>
+        <th>TURNO</th>
+        <th>Responsável</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if api_rows %}
+        {% for r in api_rows %}
+        <tr class="{% if '1º' in r.turno %}bg-turno-1{% elif '2º' in r.turno %}bg-turno-2{% elif '3º' in r.turno %}bg-turno-3{% endif %}">
+          <td>{{ r.id_api }}</td>
+          <td>{{ r.tear }}</td>
+          <td>{{ r.hora_inicio }}</td>
+          <td>{{ r.hora_fim }}</td>
+          <td>{{ r.data }}</td>
+          <td>{{ r.cod_motivo }}</td>
+          <td>{{ r.motivo }}</td>
+          <td>{{ r.turno }}</td>
+          <td>{{ r.responsavel }}</td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="9" class="text-center text-muted">Nenhum registro para a data selecionada.</td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+<style>
+  .bg-turno-1 td { background: #fff7b3; }
+  .bg-turno-2 td { background: #b9dfc2; }
+  .bg-turno-3 td { background: #f4d28d; }
+</style>
+{% endblock %}

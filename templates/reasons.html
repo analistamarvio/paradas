@@ -1,0 +1,33 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4 p-3 rounded" style="background:#0a3d62; color:#fff;">
+  <h2 class="mb-0 fw-bold text-uppercase">MOTIVOS</h2>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-light btn-lg fw-bold text-uppercase" href="{{ url_for('dashboard') }}">Voltar</a>
+    <a class="btn btn-light btn-lg fw-bold text-uppercase" style="color:#0a3d62;" href="{{ url_for('reasons_create') }}">Adicionar</a>
+  </div>
+</div>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Código</th>
+      <th>Descrição</th>
+      <th class="text-end">Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in reasons %}
+    <tr>
+      <td>{{ r['code'] }}</td>
+      <td>{{ r['description'] }}</td>
+      <td class="text-end">
+        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('reasons_edit', reason_id=r['id']) }}">Editar</a>
+        <form method="post" action="{{ url_for('reasons_delete', reason_id=r['id']) }}" class="d-inline" onsubmit="return confirm('Remover motivo?');">
+          <button class="btn btn-sm btn-outline-danger">Excluir</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

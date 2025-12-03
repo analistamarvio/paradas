@@ -1,0 +1,33 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4 p-3 rounded" style="background:#0a3d62; color:#fff;">
+  <h2 class="mb-0 fw-bold text-uppercase">TIPOS DE TURNO</h2>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-light btn-lg fw-bold text-uppercase" href="{{ url_for('dashboard') }}">Voltar</a>
+    <a class="btn btn-light btn-lg fw-bold text-uppercase" style="color:#0a3d62;" href="{{ url_for('shift_types_create') }}">Adicionar</a>
+  </div>
+</div>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Nome</th>
+      <th class="text-end">Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for t in shift_types %}
+    <tr>
+      <td>{{ t['id'] }}</td>
+      <td>{{ t['name'] }}</td>
+      <td class="text-end">
+        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('shift_types_edit', type_id=t['id']) }}">Editar</a>
+        <form method="post" action="{{ url_for('shift_types_delete', type_id=t['id']) }}" class="d-inline" onsubmit="return confirm('Remover tipo de turno?');">
+          <button class="btn btn-sm btn-outline-danger">Excluir</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

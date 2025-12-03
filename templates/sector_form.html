@@ -1,0 +1,21 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>{{ 'Editar setor' if sector else 'Novo setor' }}</h3>
+  <a class="btn btn-outline-secondary" href="{{ url_for('dashboard') }}">Voltar para dashboard</a>
+</div>
+<form method="post" action="{{ action_url }}" class="row g-3">
+  <div class="col-md-8">
+    <label class="form-label">Nome</label>
+    <input class="form-control" type="text" name="name" value="{{ sector['name'] if sector else '' }}" required>
+  </div>
+  <div class="col-md-4">
+    <label class="form-label">Nível</label>
+    <input class="form-control" type="number" name="level" value="{{ sector['level'] if sector else '' }}" required>
+  </div>
+  <div class="col-12">
+    <button class="btn btn-primary" type="submit">Salvar</button>
+    <a class="btn btn-secondary" href="{{ url_for('sectors_list') }}">Voltar para setores</a>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,394 @@
+{% extends "base.html" %}
+{% block content %}
+{% set heading = "RELATORIO DE MOTIVOS / TEAR GERAL" %}
+{% if fixed_shift_label %}
+  {% set heading = "RELATORIO DE MOTIVOS / TEAR " ~ fixed_shift_label %}
+{% endif %}
+<div class="d-flex align-items-center justify-content-between mb-4 p-3 rounded" style="background:#0a3d62; color:#fff;">
+  <h2 class="mb-0 fw-bold text-uppercase">{{ heading }}</h2>
+  <a class="btn btn-lg fw-bold" href="{{ url_for('dashboard') }}" style="background:#0a3d62; color:#fff; border:2px solid #fff;">Voltar</a>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <form class="row gy-3" method="get" action="{{ url_for('relatorio_motivos') }}" id="reportFilters">
+      <div class="col-12 col-md-3">
+        <label class="form-label fw-semibold">Data inicio</label>
+        <input type="date" class="form-control" name="start_date" value="{{ start_date }}">
+      </div>
+      <div class="col-12 col-md-3">
+        <label class="form-label fw-semibold">Data fim</label>
+        <input type="date" class="form-control" name="end_date" value="{{ end_date }}">
+      </div>
+      <div class="col-12 col-md-6 col-lg-3">
+        <label class="form-label fw-semibold">Turnos</label>
+        <div class="custom-dropdown" id="shiftDropdown">
+          <button type="button" class="custom-dropdown-toggle" id="shiftDropdownToggle">
+            <span id="shiftDropdownLabel">Todos os turnos</span>
+            <span class="chevron">▾</span>
+          </button>
+          <div class="custom-dropdown-menu" id="shiftDropdownMenu">
+            <div class="dropdown-actions">
+              <span class="text-muted small">Escolha um turno ou deixe Todos</span>
+            </div>
+            <div class="dropdown-list">
+              <button type="button" class="dropdown-item" data-shift-id="">
+                <span class="item-check">▣</span>
+                <span class="item-label">Todos</span>
+              </button>
+              {% for st in shift_types %}
+              <button type="button" class="dropdown-item" data-shift-id="{{ st.id }}">
+                <span class="item-check">▢</span>
+                <span class="item-label">{{ st.name }}</span>
+              </button>
+              {% endfor %}
+            </div>
+          </div>
+          <input type="hidden" name="shift_type" id="shift_type_input" value="{{ selected_shift_type }}">
+          <select class="d-none" id="shift_types_select">
+            <option value=""></option>
+            {% for st in shift_types %}
+            <option value="{{ st.id }}" {% if selected_shift_type and selected_shift_type|int == st.id %}selected{% endif %}>{{ st.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="col-12 col-md-6 col-lg-3 d-flex flex-column">
+        <label class="form-label fw-semibold">Tear</label>
+        <select class="form-select" name="loom">
+          {% if not selected_loom %}
+          <option value="" selected disabled>Selecione um tear</option>
+          {% endif %}
+          {% for loom in looms %}
+          <option value="{{ loom.id }}" {% if selected_loom and selected_loom|int == loom.id %}selected{% endif %}>Tear {{ loom.number }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title mb-3">Resultados</h5>
+    {% if report %}
+    <div class="table-responsive">
+      <table class="table table-sm table-bordered align-middle text-center">
+        <thead class="table-light">
+          <tr>
+            <th class="text-start">Codigo</th>
+            <th class="text-start">Motivo</th>
+            {% for d in day_labels %}
+            <th>{{ d }}</th>
+            {% endfor %}
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in report %}
+          <tr>
+            <th class="text-start">{{ row.reason.code }}</th>
+            <td class="text-start">{{ row.reason.description }}</td>
+            {% for v in row['values'] %}
+            <td>{% if v %}{{ (v // 60) }}h {{ '%02d' % (v % 60) }}{% else %}-{% endif %}</td>
+            {% endfor %}
+            <th>{% if row.total %}{{ (row.total // 60) }}h {{ '%02d' % (row.total % 60) }}{% else %}-{% endif %}</th>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="table-light">
+          <tr>
+            <th class="text-start" colspan="2">Total</th>
+            {% for minutes_val in column_totals %}
+              <th>{% if minutes_val %}{{ (minutes_val // 60) }}h {{ '%02d' % (minutes_val % 60) }}{% else %}-{% endif %}</th>
+            {% endfor %}
+            <th>{% if grand_total %}{{ (grand_total // 60) }}h {{ '%02d' % (grand_total % 60) }}{% else %}-{% endif %}</th>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    {% else %}
+      <p class="text-muted mb-0">Selecione um tear e per�odo para gerar o relatorio.</p>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('reportFilters');
+  if (!form) return;
+  if (form.getAttribute('action') === "{{ url_for('relatorio_motivos') }}") {
+    form.setAttribute('action', window.location.pathname);
+  }
+  const autosubmit = () => {
+    if (form.requestSubmit) {
+      form.requestSubmit();
+    } else {
+      form.submit();
+    }
+  };
+  const shiftSelect = document.getElementById('shift_types_select');
+  const shiftInput = document.getElementById('shift_type_input');
+  const dropdown = document.getElementById('shiftDropdown');
+  const dropdownToggle = document.getElementById('shiftDropdownToggle');
+  const dropdownMenu = document.getElementById('shiftDropdownMenu');
+  const dropdownItems = Array.from(document.querySelectorAll('.dropdown-item[data-shift-id]'));
+  const dropdownLabel = document.getElementById('shiftDropdownLabel');
+  const otherInputs = Array.from(form.querySelectorAll('input:not([name=\"shift_type\"]), select:not(#shift_types_select)'));
+
+  const setSelection = (value) => {
+    shiftInput.value = value;
+    Array.from(shiftSelect.options).forEach(opt => { opt.selected = (opt.value === value); });
+    dropdownItems.forEach(btn => {
+      if (btn.dataset.shiftId === value) {
+        btn.classList.add('active');
+        btn.querySelector('.item-check').textContent = '▣';
+        dropdownLabel.textContent = value ? btn.querySelector('.item-label').textContent : 'Todos os turnos';
+      } else {
+        btn.classList.remove('active');
+        btn.querySelector('.item-check').textContent = '▢';
+      }
+    });
+  };
+
+  otherInputs.forEach(el => el.addEventListener('change', autosubmit));
+
+  if (dropdownToggle && dropdownMenu) {
+    dropdownToggle.addEventListener('click', () => {
+      dropdown.classList.toggle('open');
+    });
+  }
+
+  dropdownItems.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.shiftId;
+      setSelection(id);
+      dropdown.classList.remove('open');
+      autosubmit();
+    });
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!dropdown.contains(e.target)) {
+      dropdown.classList.remove('open');
+    }
+  });
+
+  setSelection(shiftInput.value || '');
+});
+</script>
+{% if chart_labels %}
+<div class="card mt-3">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+      <h5 class="card-title mb-0">Horas por dia ({{ selected_loom_label }})</h5>
+      <div class="d-flex align-items-center gap-3">
+        <span class="d-inline-flex align-items-center gap-2 legend-pill">
+          <span class="legend-swatch" style="background:#e74c3c;"></span>
+          Horas paradas
+        </span>
+        <span class="d-inline-flex align-items-center gap-2 legend-pill">
+          <span class="legend-swatch" style="background:#2ecc71;"></span>
+          Horas funcionando
+        </span>
+      </div>
+    </div>
+    <div style="height: 360px;">
+      <canvas id="motivosChart"></canvas>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function() {
+  const labels = {{ chart_labels | tojson }};
+  const downtime = {{ chart_downtime | tojson }};
+  const running = {{ chart_running | tojson }};
+  const chartMaxHours = {{ chart_max_hours | tojson }};
+  const ctx = document.getElementById('motivosChart');
+  if (!ctx) return;
+
+  const fmtHours = (val) => {
+    const hours = Math.floor(val);
+    const minutes = Math.round((val - hours) * 60);
+    return `${hours}h ${String(minutes).padStart(2, '0')}`;
+  };
+
+  const valueLabelPlugin = {
+    id: 'valueLabelPlugin',
+    afterDatasetsDraw(chart) {
+      const {ctx} = chart;
+      chart.data.datasets.forEach((dataset, datasetIndex) => {
+        const meta = chart.getDatasetMeta(datasetIndex);
+        meta.data.forEach((element, index) => {
+          const val = dataset.data[index];
+          if (val === null || val === undefined) return;
+          const {x, y} = element.tooltipPosition();
+          const label = fmtHours(val);
+          const textWidth = ctx.measureText(label).width;
+          const minX = chart.chartArea.left + textWidth / 2 + 4;
+          const maxX = chart.chartArea.right - textWidth / 2 - 4;
+          const adjustedX = Math.max(minX, Math.min(maxX, x));
+          ctx.save();
+          ctx.font = 'bold 13px sans-serif';
+          const labelColor = dataset.label === 'Horas funcionando' ? '#0b5132' : '#7a1b1b';
+          ctx.fillStyle = labelColor;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(label, adjustedX, y - 6);
+          ctx.restore();
+        });
+      });
+    }
+  };
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Horas paradas',
+          data: downtime.map(m => m / 60),
+          borderColor: '#e74c3c',
+          backgroundColor: 'rgba(231, 76, 60, 0.18)',
+          tension: 0.25,
+          fill: true,
+        },
+        {
+          label: 'Horas funcionando',
+          data: running.map(m => m / 60),
+          borderColor: '#2ecc71',
+          backgroundColor: 'rgba(46, 204, 113, 0.18)',
+          tension: 0.25,
+          fill: true,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.dataset.label}: ${ctx.formattedValue}h`,
+          },
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1,
+            callback: (value) => {
+              if (chartMaxHours > 24 && (value === 26 || value === 28)) return '';
+              return value;
+            },
+          },
+          suggestedMax: chartMaxHours,
+          title: {
+            display: true,
+            text: 'H o r a s (h)',
+            font: { size: 13, weight: '600' },
+            color: '#1f3b8f',
+          },
+        },
+      },
+    },
+    plugins: [valueLabelPlugin],
+  });
+})();
+</script>
+{% endif %}
+<style>
+.custom-dropdown {
+  position: relative;
+  width: 100%;
+  font-weight: 500;
+}
+.custom-dropdown-toggle {
+  width: 100%;
+  text-align: left;
+  background: #fff;
+  border: 2px solid #4d7bfe;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+  color: #1f3b8f;
+}
+.custom-dropdown .chevron {
+  font-size: 16px;
+  color: #1f3b8f;
+  transition: transform 0.15s ease;
+}
+.custom-dropdown.open .chevron {
+  transform: rotate(180deg);
+}
+.custom-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 2px solid #4d7bfe;
+  border-radius: 10px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+  padding: 8px;
+  display: none;
+  z-index: 20;
+}
+.custom-dropdown.open .custom-dropdown-menu {
+  display: block;
+}
+.dropdown-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.dropdown-list {
+  max-height: 240px;
+  overflow-y: auto;
+}
+.dropdown-item {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  padding: 10px 12px;
+  border-radius: 8px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: #1f3b8f;
+}
+.dropdown-item:hover {
+  background: #eef3ff;
+}
+.dropdown-item.active {
+  background: #e1e8ff;
+  font-weight: 600;
+}
+.item-check {
+  width: 18px;
+  display: inline-block;
+}
+.item-label {
+  flex: 1;
+}
+.legend-swatch {
+  width: 18px;
+  height: 10px;
+  display: inline-block;
+  border-radius: 6px;
+}
+.legend-pill {
+  font-weight: 600;
+  color: #1f3b8f;
+}
+</style>
+{% endblock %}

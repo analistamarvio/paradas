@@ -1,0 +1,133 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<div class="menu-grid">
+  {% if level_allowed([6]) %}
+  <a class="menu-card primary" href="{{ url_for('users_list') }}">USUARIOS</a>
+  {% endif %}
+  {% if level_allowed([5, 6]) %}
+  <a class="menu-card primary" href="{{ url_for('sectors_list') }}">SETORES</a>
+  <a class="menu-card primary" href="{{ url_for('shifts_list') }}">TURNOS</a>
+  <a class="menu-card primary" href="{{ url_for('shift_types_list') }}">TIPOS DE TURNO</a>
+  <a class="menu-card primary" href="{{ url_for('reasons_list') }}">MOTIVOS</a>
+  <a class="menu-card primary" href="{{ url_for('looms_list') }}">TEARS</a>
+  {% endif %}
+  <a class="menu-card danger" href="{{ url_for('dashboard_teares') }}">STATUS TEARES</a>
+  {% if level_allowed([4, 5, 6]) %}
+  <a class="menu-card report" href="{{ url_for('relatoriogeral') }}">RELATORIO GERAL</a>
+  {% endif %}
+  {% if level_allowed([1, 2, 3, 5, 6]) %}
+  <a class="menu-card secondary" href="{{ url_for('enviar_banco_turno1') }}">ENVIAR 1º TURNO</a>
+  {% endif %}
+  {% if level_allowed([2, 5, 6]) %}
+  <a class="menu-card secondary" href="{{ url_for('enviar_banco_turno2') }}">ENVIAR 2º TURNO</a>
+  {% endif %}
+  {% if level_allowed([3, 5, 6]) %}
+  <a class="menu-card secondary" href="{{ url_for('enviar_banco_turno3') }}">ENVIAR 3º TURNO</a>
+  {% endif %}
+  {% if level_allowed([1, 5, 6]) %}
+  <a class="menu-card report" href="{{ url_for('relatorio_primeiro_turno') }}">RELATORIO 1&ordm; TURNO</a>
+  {% endif %}
+  {% if level_allowed([2, 5, 6]) %}
+  <a class="menu-card report" href="{{ url_for('relatorio_segundo_turno') }}">RELATORIO 2&ordm; TURNO</a>
+  {% endif %}
+  {% if level_allowed([3, 5, 6]) %}
+  <a class="menu-card report" href="{{ url_for('relatorio_terceiro_turno') }}">RELATORIO 3&ordm; TURNO</a>
+  {% endif %}
+  {% if level_allowed([4, 5, 6]) %}
+  <a class="menu-card motives" href="{{ url_for('relatorio_motivos') }}">RELATORIO DE MOTIVOS/TEAR GERAL</a>
+  {% endif %}
+  {% if level_allowed([1, 5, 6]) %}
+  <a class="menu-card motives" href="{{ url_for('relatorio_motivos_primeiro_turno') }}">RELATORIO MOTIVOS/TEAR 1&ordm; TURNO</a>
+  {% endif %}
+  {% if level_allowed([2, 5, 6]) %}
+  <a class="menu-card motives" href="{{ url_for('relatorio_motivos_segundo_turno') }}">RELATORIO MOTIVOS/TEAR 2&ordm; TURNO</a>
+  {% endif %}
+  {% if level_allowed([3, 5, 6]) %}
+  <a class="menu-card motives" href="{{ url_for('relatorio_motivos_terceiro_turno') }}">RELATORIO MOTIVOS/TEAR 3&ordm; TURNO</a>
+  {% endif %}
+  {% if level_allowed([4, 5, 6]) %}
+  <a class="menu-card motives daily" href="{{ url_for('relatorio_motivos_geral_dia') }}">RELATORIO DE PARADAS / MOTIVO GERAL</a>
+  {% endif %}
+  {% if level_allowed([1, 5, 6]) %}
+  <a class="menu-card motives daily" href="{{ url_for('relatorio_paradas_motivo_primeiro_turno') }}">RELATORIO DE PARADAS / MOTIVO 1&ordm; TURNO</a>
+  {% endif %}
+  {% if level_allowed([2, 5, 6]) %}
+  <a class="menu-card motives daily" href="{{ url_for('relatorio_paradas_motivo_segundo_turno') }}">RELATORIO DE PARADAS / MOTIVO 2&ordm; TURNO</a>
+  {% endif %}
+  {% if level_allowed([3, 5, 6]) %}
+  <a class="menu-card motives daily" href="{{ url_for('relatorio_paradas_motivo_terceiro_turno') }}">RELATORIO DE PARADAS / MOTIVO 3&ordm; TURNO</a>
+  {% endif %}
+  {% if session.get('user_id') %}
+  <a class="menu-card danger" href="{{ url_for('logout') }}">SAIR ({{ session.get('username') }})</a>
+  {% endif %}
+</div>
+
+
+<style>
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+.menu-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 90px;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 18px;
+  border-radius: 14px;
+  text-align: center;
+  border: 2px solid #0d6efd;
+  color: #0d6efd;
+  background: #e9f2ff;
+  text-decoration: none;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.menu-card.primary {
+  border-color: #0d6efd;
+  color: #0d6efd;
+  background: #e9f2ff;
+}
+.menu-card.secondary {
+  border-color: #6c757d;
+  color: #495057;
+  background: #f0f0f0;
+}
+.menu-card.report {
+  border-color: #145a32;
+  color: #fff;
+  background: #1e7e34;
+}
+.menu-card.motives {
+  border-color: #0a3d62;
+  color: #fff;
+  background: #0c4f82;
+}
+.menu-card.motives.daily {
+  border-color: #b87333;
+  color: #fff;
+  background: #cd7f32;
+}
+.menu-card.danger {
+  border-color: #dc3545;
+  color: #dc3545;
+  background: #fdecee;
+}
+.menu-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+}
+@media (max-width: 992px) {
+  .menu-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .menu-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}
+</style>
+{% endblock %}

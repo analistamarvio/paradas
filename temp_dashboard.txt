@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="mb-4">Dashboard Teares</h2>
+{% set stop_ns = namespace(card=None) %}
+{% if stop_data %}
+  {% for c in cards %}
+    {% if c.id == stop_data.loom_id|int %}
+      {% set stop_ns.card = c %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+{% set start_ns = namespace(card=None) %}
+{% if start_data %}
+  {% for c in cards %}
+    {% if c.id == start_data.loom_id|int %}
+      {% set start_ns.card = c %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+<div class="row g-3">
+  {% for card in cards %}
+  <div class="col-12 col-sm-6 col-lg-4">
+    <div class="card h-100 text-center {% if card.status == 1 %}border-success bg-success-subtle{% else %}border-danger bg-danger-subtle{% endif %}">
+      <div class="card-body">
+        <h4 class="card-title">Tear {{ card.number }}</h4>
+        <p class="mb-1">{{ card.since_label }} {{ card.since_text }}</p>
+        {% if card.reason %}<p class="text-muted mb-2">{% if card.status == 1 %}Último motivo{% else %}Motivo atual{% endif %}: {{ card.reason }}</p>{% endif %}
+        {% if card.status == 1 %}
+          <button class="btn btn-danger" type="button" data-bs-toggle="modal" data-bs-target="#stopModal"
+                  data-loom-id="{{ card.id }}" data-loom-number="{{ card.number }}" data-start-time="{{ card.start_time or '' }}">
+            Parar
+          </button>
+        {% else %}
+          <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#startModal"
+                  data-loom-id="{{ card.id }}" data-loom-number="{{ card.number }}" data-stop-time="{{ card.stop_time or '' }}" data-reason="{{ card.reason or '' }}" data-reason-id="{{ card.reason_id or '' }}">
+            Iniciar
+          </button>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Stop modal -->
+<div class="modal fade" id="stopModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post" id="stopForm">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title">Parar o tear</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          {% if error_stop %}<div class="alert alert-danger">{{ error_stop }}</div>{% endif %}
+          <input type="hidden" name="loom_id" id="stop_loom_id" value="{{ stop_data.loom_id if stop_data }}">
+          <div class="mb-3">
+            <label class="form-label">Tear</label>
+            <input type="text" class="form-control" id="stop_loom_label" value="{{ 'Tear ' ~ stop_ns.card.number if stop_ns.card else '' }}" disabled>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Funcionando desde</label>
+            <input type="text" class="form-control" id="stop_running_since" value="{{ stop_ns.card.start_time if stop_ns.card else '' }}" disabled>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Horário (dentro do turno)</label>
+            <input type="time" class="form-control" name="event_time" id="stop_time_input" value="{{ (stop_data.event_time if stop_data else now.strftime('%H:%M')) }}" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Motivo</label>
+            <select class="form-select" name="reason_id" id="stop_reason_select" required>
+              <option value="">-- selecione --</option>
+              {% for r in reasons %}
+              <option value="{{ r.id }}" {% if stop_data and stop_data.reason_id and stop_data.reason_id|int == r.id %}selected{% endif %}>{{ r.code }} - {{ r.description }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Turno (dia {{ day_label(current_weekday) }})</label>
+            <select class="form-select" name="shift_id" required>
+              {% for sh in user_shifts %}
+              <option value="{{ sh.id }}" {% if stop_data and stop_data.shift_id and stop_data.shift_id|int == sh.id %}selected{% endif %}>{{ sh.type_name }} - {{ sh.start_1 }} às {{ sh.end_2 }} ({{ sh.start_2 }} saída)</option>
+              {% endfor %}
+            </select>
+            {% if not user_shifts %}<div class="form-text text-danger">Nenhum turno cadastrado para hoje.</div>{% endif %}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-danger" id="stop_submit_btn" {% if not stop_data or not stop_data.reason_id %}disabled{% endif %}>Parar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Start modal -->
+<div class="modal fade" id="startModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post" id="startForm">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title">Iniciar o tear</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          {% if error_start %}<div class="alert alert-danger">{{ error_start }}</div>{% endif %}
+          <input type="hidden" name="loom_id" id="start_loom_id" value="{{ start_data.loom_id if start_data }}">
+          <div class="mb-3">
+            <label class="form-label">Tear</label>
+            <input type="text" class="form-control" id="start_loom_label" value="{{ 'Tear ' ~ start_ns.card.number if start_ns.card else '' }}" disabled>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Parado desde</label>
+            <input type="text" class="form-control" id="start_stopped_since" value="{{ start_ns.card.stop_time if start_ns.card else '' }}" disabled>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Horário (dentro do turno)</label>
+            <input type="time" class="form-control" name="event_time" id="start_time_input" value="{{ (start_data.event_time if start_data else now.strftime('%H:%M')) }}" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Motivo da parada</label>
+            <input type="text" class="form-control" id="start_reason_label" value="{{ start_ns.card.reason if start_ns.card else '' }}" disabled>
+            <input type="hidden" name="reason_id" id="start_reason_id" value="{{ start_data.reason_id if start_data }}">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Turno (dia {{ day_label(current_weekday) }})</label>
+            <select class="form-select" name="shift_id" required>
+              {% for sh in user_shifts %}
+              <option value="{{ sh.id }}" {% if start_data and start_data.shift_id and start_data.shift_id|int == sh.id %}selected{% endif %}>{{ sh.type_name }} - {{ sh.start_1 }} às {{ sh.end_2 }} ({{ sh.start_2 }} saída)</option>
+              {% endfor %}
+            </select>
+            {% if not user_shifts %}<div class="form-text text-danger">Nenhum turno cadastrado para hoje.</div>{% endif %}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Iniciar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function formatIsoToDisplay(isoStr) {
+  if (!isoStr) return '';
+  const dt = new Date(isoStr);
+  const pad = (n) => n.toString().padStart(2, '0');
+  return `${pad(dt.getDate())}/${pad(dt.getMonth()+1)}/${dt.getFullYear()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+}
+window.addEventListener('load', () => {
+  const stopModal = document.getElementById('stopModal');
+  stopModal?.addEventListener('show.bs.modal', event => {
+    const button = event.relatedTarget;
+    const loomId = button.getAttribute('data-loom-id');
+    const loomNumber = button.getAttribute('data-loom-number');
+    const startTime = button.getAttribute('data-start-time');
+    document.getElementById('stop_loom_id').value = loomId;
+    document.getElementById('stop_loom_label').value = `Tear ${loomNumber}`;
+    document.getElementById('stop_running_since').value = formatIsoToDisplay(startTime);
+    document.getElementById('stopForm').action = `/looms/${loomId}/stop`;
+    const reasonSelect = document.getElementById('stop_reason_select');
+    const stopBtn = document.getElementById('stop_submit_btn');
+    if (reasonSelect && stopBtn) {
+      const toggle = () => { stopBtn.disabled = !reasonSelect.value; };
+      reasonSelect.onchange = toggle;
+      toggle();
+    }
+  });
+
+  const startModal = document.getElementById('startModal');
+  startModal?.addEventListener('show.bs.modal', event => {
+    const button = event.relatedTarget;
+    const loomId = button.getAttribute('data-loom-id');
+    const loomNumber = button.getAttribute('data-loom-number');
+    const stopTime = button.getAttribute('data-stop-time');
+    const reason = button.getAttribute('data-reason') || '';
+    const reasonId = button.getAttribute('data-reason-id') || '';
+    document.getElementById('start_loom_id').value = loomId;
+    document.getElementById('start_loom_label').value = `Tear ${loomNumber}`;
+    document.getElementById('start_stopped_since').value = formatIsoToDisplay(stopTime);
+    document.getElementById('start_reason_label').value = reason;
+    document.getElementById('start_reason_id').value = reasonId;
+    document.getElementById('startForm').action = `/looms/${loomId}/start`;
+  });
+
+  {% if open_modal %}
+    const m = new bootstrap.Modal(document.getElementById('{{ open_modal }}Modal'));
+    m.show();
+  {% endif %}
+});
+</script>
+{% endblock %}
+

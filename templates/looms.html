@@ -1,0 +1,35 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4 p-3 rounded" style="background:#0a3d62; color:#fff;">
+  <h2 class="mb-0 fw-bold text-uppercase">TEARS</h2>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-light btn-lg fw-bold text-uppercase" href="{{ url_for('dashboard') }}">Voltar</a>
+    <a class="btn btn-light btn-lg fw-bold text-uppercase" style="color:#0a3d62;" href="{{ url_for('looms_create') }}">Adicionar</a>
+  </div>
+</div>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Nome</th>
+      <th>Numero</th>
+      <th class="text-end">Acoes</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for l in looms %}
+    <tr>
+      <td>{{ l.id }}</td>
+      <td>{{ l.name }}</td>
+      <td>{{ l.number }}</td>
+      <td class="text-end">
+        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('looms_edit', loom_id=l.id) }}">Editar</a>
+        <form method="post" action="{{ url_for('looms_delete', loom_id=l.id) }}" class="d-inline" onsubmit="return confirm('Remover tear?');">
+          <button class="btn btn-sm btn-outline-danger">Excluir</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

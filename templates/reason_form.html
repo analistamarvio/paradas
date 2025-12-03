@@ -1,0 +1,21 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>{{ 'Editar motivo' if reason else 'Novo motivo' }}</h3>
+  <a class="btn btn-outline-secondary" href="{{ url_for('dashboard') }}">Voltar para dashboard</a>
+</div>
+<form method="post" action="{{ action_url }}" class="row g-3">
+  <div class="col-md-3">
+    <label class="form-label">Código</label>
+    <input class="form-control" type="number" name="code" value="{{ reason['code'] if reason else '' }}" required>
+  </div>
+  <div class="col-md-9">
+    <label class="form-label">Descrição</label>
+    <input class="form-control" type="text" name="description" value="{{ reason['description'] if reason else '' }}" required>
+  </div>
+  <div class="col-12">
+    <button class="btn btn-primary" type="submit">Salvar</button>
+    <a class="btn btn-secondary" href="{{ url_for('reasons_list') }}">Voltar para motivos</a>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,35 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4 p-3 rounded" style="background:#0a3d62; color:#fff;">
+  <h2 class="mb-0 fw-bold text-uppercase">SETORES</h2>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-light btn-lg fw-bold text-uppercase" href="{{ url_for('dashboard') }}">Voltar</a>
+    <a class="btn btn-light btn-lg fw-bold text-uppercase" style="color:#0a3d62;" href="{{ url_for('sectors_create') }}">Adicionar</a>
+  </div>
+</div>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Nome</th>
+      <th>Nível</th>
+      <th class="text-end">Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for s in sectors %}
+    <tr>
+      <td>{{ s.id }}</td>
+      <td>{{ s.name }}</td>
+      <td>{{ s.level }}</td>
+      <td class="text-end">
+        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('sectors_edit', sector_id=s.id) }}">Editar</a>
+        <form method="post" action="{{ url_for('sectors_delete', sector_id=s.id) }}" class="d-inline" onsubmit="return confirm('Remover setor?');">
+          <button class="btn btn-sm btn-outline-danger">Excluir</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

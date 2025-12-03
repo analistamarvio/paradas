@@ -1,0 +1,17 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>{{ 'Editar tipo de turno' if shift_type else 'Novo tipo de turno' }}</h3>
+  <a class="btn btn-outline-secondary" href="{{ url_for('dashboard') }}">Voltar para dashboard</a>
+</div>
+<form method="post" action="{{ action_url }}" class="row g-3">
+  <div class="col-md-6">
+    <label class="form-label">Nome</label>
+    <input class="form-control" type="text" name="name" value="{{ shift_type['name'] if shift_type else '' }}" required>
+  </div>
+  <div class="col-12">
+    <button class="btn btn-primary" type="submit">Salvar</button>
+    <a class="btn btn-secondary" href="{{ url_for('shift_types_list') }}">Voltar para tipos</a>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4 p-3 rounded" style="background:#0a3d62; color:#fff;">
+  <h2 class="mb-0 fw-bold text-uppercase">{{ heading or 'RELATORIO DE PARADAS / MOTIVO GERAL' }}</h2>
+  <a class="btn btn-lg fw-bold" href="{{ url_for('dashboard') }}" style="background:#0a3d62; color:#fff; border:2px solid #fff;">Voltar</a>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <form class="row gy-3" method="get" action="{{ url_for('relatorio_motivos_geral_dia') }}" id="reportFiltersMotivosDia">
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold">Data inicio</label>
+        <input type="date" class="form-control" name="start_date" value="{{ start_date }}">
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold">Data fim</label>
+        <input type="date" class="form-control" name="end_date" value="{{ end_date }}">
+      </div>
+      {% set fixed_shift = shift_types|length == 1 %}
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold">Turnos</label>
+        {% if fixed_shift %}
+          <div class="form-control-plaintext fw-semibold">{{ shift_types[0].name }}</div>
+          <input type="hidden" name="shift_type" value="{{ shift_types[0].id }}">
+        {% else %}
+          <select class="form-select" name="shift_type">
+            <option value="">Todos os turnos</option>
+            {% for st in shift_types %}
+            <option value="{{ st.id }}" {% if selected_shift_type and selected_shift_type|int == st.id %}selected{% endif %}>{{ st.name }}</option>
+            {% endfor %}
+          </select>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('reportFiltersMotivosDia');
+  if (!form) return;
+  const autoSubmit = () => {
+    if (form.requestSubmit) {
+      form.requestSubmit();
+    } else {
+      form.submit();
+    }
+  };
+  const inputs = form.querySelectorAll('input, select');
+  inputs.forEach(el => el.addEventListener('change', autoSubmit));
+});
+</script>
+
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title mb-3">Resultados</h5>
+    {% if report %}
+    <div class="table-responsive">
+      <table class="table table-sm table-bordered align-middle text-center">
+        <thead class="table-light">
+          <tr>
+            <th class="text-start">Codigo</th>
+            <th class="text-start">Motivo</th>
+            {% for d in day_labels %}
+            <th>{{ d }}</th>
+            {% endfor %}
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in report %}
+          <tr>
+            <th class="text-start">{{ row.code }}</th>
+            <td class="text-start">{{ row.description }}</td>
+            {% for v in row['values'] %}
+            <td>{% if v %}{{ (v // 60) }}h {{ '%02d' % (v % 60) }}{% else %}-{% endif %}</td>
+            {% endfor %}
+            <th>{% if row.total %}{{ (row.total // 60) }}h {{ '%02d' % (row.total % 60) }}{% else %}-{% endif %}</th>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="table-light">
+          <tr>
+            <th class="text-start" colspan="2">Total</th>
+            {% for minutes_val in column_totals %}
+              <th>{% if minutes_val %}{{ (minutes_val // 60) }}h {{ '%02d' % (minutes_val % 60) }}{% else %}-{% endif %}</th>
+            {% endfor %}
+            <th>{% if grand_total %}{{ (grand_total // 60) }}h {{ '%02d' % (grand_total % 60) }}{% else %}-{% endif %}</th>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    {% else %}
+      <p class="text-muted mb-0">Nenhum dado para o período selecionado.</p>
+    {% endif %}
+  </div>
+</div>
+{% if report %}
+<div class="card mt-3">
+  <div class="card-body">
+    <h5 class="card-title mb-3">Barras empilhadas por dia (motivos)</h5>
+    <div style="height: 380px;">
+      <canvas id="stackedReasonsChart"></canvas>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function() {
+  const labels = {{ day_labels|tojson }};
+  const rows = {{ report|tojson }};
+  const ctx = document.getElementById('stackedReasonsChart');
+  if (!ctx || !rows || !rows.length) return;
+  const colors = [
+    '#1abc9c','#3498db','#9b59b6','#e74c3c','#f1c40f',
+    '#2ecc71','#e67e22','#34495e','#16a085','#2980b9',
+    '#8e44ad','#c0392b','#d35400','#27ae60','#7f8c8d'
+  ];
+  const datasets = rows.map((r, idx) => ({
+    label: `${r.code} - ${r.description}`,
+    data: (r.values || []).map(v => (v || 0) / 60),
+    backgroundColor: colors[idx % colors.length],
+    stack: 'stack1'
+  }));
+  new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'right' },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const val = ctx.parsed.y || 0;
+              const h = Math.floor(val);
+              const m = Math.round((val - h) * 60);
+              return `${ctx.dataset.label}: ${h}h ${String(m).padStart(2,'0')}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { stacked: true, ticks: { autoSkip: false, maxRotation: 0 } },
+        y: { stacked: true, title: { display: true, text: 'Horas paradas' } }
+      }
+    }
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

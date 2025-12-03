@@ -1,0 +1,47 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>{{ 'Editar turno' if shift else 'Novo turno' }}</h3>
+  <a class="btn btn-outline-secondary" href="{{ url_for('dashboard') }}">Voltar para dashboard</a>
+</div>
+<form method="post" action="{{ action_url }}" class="row g-3">
+  <div class="col-md-4">
+    <label class="form-label">Tipo de turno</label>
+    <select class="form-select" name="shift_type_id">
+      <option value="">-- selecione --</option>
+      {% for t in shift_types %}
+      <option value="{{ t.id }}" {% if shift and shift['shift_type_id'] == t.id %}selected{% endif %}>{{ t.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-4">
+    <label class="form-label">Dia da semana</label>
+    <select class="form-select" name="day" required>
+      {% for idx in range(0,7) %}
+      <option value="{{ idx }}" {% if shift and shift['day'] == idx %}selected{% endif %}>{{ day_label(idx) }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-4 d-flex align-items-end">
+    <div class="text-muted">Use formato HH:MM</div>
+  </div>
+  <div class="col-md-4">
+    <label class="form-label">Inicio</label>
+    <input class="form-control" type="time" name="start_1" value="{{ shift['start_1'] if shift else '' }}" required>
+  </div>
+  <div class="col-md-4">
+    <label class="form-label">Fim</label>
+    <input class="form-control" type="time" name="end_1" value="{{ shift['end_1'] if shift else '' }}" required>
+  </div>
+  {% if shift %}
+  <div class="col-md-4">
+    <label class="form-label">Total (calculado)</label>
+    <input class="form-control" type="text" value="{{ format_total(shift['total_minutes']) }}" disabled>
+  </div>
+  {% endif %}
+  <div class="col-12">
+    <button class="btn btn-primary" type="submit">Salvar</button>
+    <a class="btn btn-secondary" href="{{ url_for('shifts_list') }}">Voltar para turnos</a>
+  </div>
+</form>
+{% endblock %}

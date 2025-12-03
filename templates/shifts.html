@@ -1,0 +1,41 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4 p-3 rounded" style="background:#0a3d62; color:#fff;">
+  <h2 class="mb-0 fw-bold text-uppercase">TURNOS</h2>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-light btn-lg fw-bold text-uppercase" href="{{ url_for('dashboard') }}">Voltar</a>
+    <a class="btn btn-light btn-lg fw-bold text-uppercase" style="color:#0a3d62;" href="{{ url_for('shifts_create') }}">Adicionar</a>
+  </div>
+</div>
+<table class="table table-striped align-middle">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Tipo</th>
+      <th>Dia</th>
+      <th>Inicio</th>
+      <th>Fim</th>
+      <th>Total</th>
+      <th class="text-end">Acoes</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for h in shifts %}
+    <tr>
+      <td>{{ h['id'] }}</td>
+      <td>{{ h['type_name'] or '-' }}</td>
+      <td>{{ day_label(h['day']) }}</td>
+      <td>{{ h['start_1'] }}</td>
+      <td>{{ h['end_1'] }}</td>
+      <td>{{ format_total(h['total_minutes']) }}</td>
+      <td class="text-end">
+        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('shifts_edit', shift_id=h['id']) }}">Editar</a>
+        <form method="post" action="{{ url_for('shifts_delete', shift_id=h['id']) }}" class="d-inline" onsubmit="return confirm('Remover turno?');">
+          <button class="btn btn-sm btn-outline-danger">Excluir</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

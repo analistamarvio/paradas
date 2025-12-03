@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-4">
+  <h3 class="fw-bold">Enviar 2º turno (13:30 - 22:00)</h3>
+  <div class="d-flex align-items-end gap-3 flex-wrap">
+    <div class="form-control-plaintext fw-semibold">Data: {{ selected_date }}</div>
+    <form method="post" class="mb-0">
+      <button type="submit" class="btn btn-lg" style="background:#2c8f3f;color:#fff;">Atualizar 2º turno</button>
+    </form>
+    <a href="{{ url_for('dashboard_teares') }}" class="btn btn-lg text-white" style="background:#0d6efd;">Ir para Paradas</a>
+  </div>
+  <p class="text-muted mt-2 mb-0">Busca todas as paradas do 2º turno (13:30-22:00) do dia atual.</p>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-bordered table-sm align-middle text-center">
+    <thead class="table-light">
+      <tr>
+        <th>id_api</th>
+        <th>TEAR</th>
+        <th>HORA INICIO</th>
+        <th>HORA FIM</th>
+        <th>DATA</th>
+        <th>Cod Motivo</th>
+        <th>Motivo</th>
+        <th>TURNO</th>
+        <th>Responsável</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if api_rows %}
+        {% for r in api_rows %}
+        <tr class="bg-turno-2">
+          <td>{{ r.id_api }}</td>
+          <td>{{ r.tear }}</td>
+          <td>{{ r.hora_inicio }}</td>
+          <td>{{ r.hora_fim }}</td>
+          <td>{{ r.data }}</td>
+          <td>{{ r.cod_motivo }}</td>
+          <td>{{ r.motivo }}</td>
+          <td>{{ r.turno }}</td>
+          <td>{{ r.responsavel }}</td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="9" class="text-center text-muted">Nenhum registro para hoje.</td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+<style>
+  .bg-turno-2 td { background: #b9dfc2; }
+</style>
+{% endblock %}
