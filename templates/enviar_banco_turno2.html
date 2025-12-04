@@ -3,13 +3,16 @@
 <div class="mb-4">
   <h3 class="fw-bold">Enviar 2º turno (13:30 - 22:00)</h3>
   <div class="d-flex align-items-end gap-3 flex-wrap">
-    <div class="form-control-plaintext fw-semibold">Data: {{ selected_date }}</div>
+    <form method="get" class="d-flex align-items-end gap-2 flex-wrap mb-0">
+      <input class="form-control form-control-lg" style="min-width: 170px;" type="date" name="date" value="{{ selected_date }}" max="{{ today_iso }}" onchange="this.form.submit()">
+    </form>
     <form method="post" class="mb-0">
+      <input type="hidden" name="date" value="{{ selected_date }}">
       <button type="submit" class="btn btn-lg" style="background:#2c8f3f;color:#fff;">Atualizar 2º turno</button>
     </form>
     <a href="{{ url_for('dashboard_teares') }}" class="btn btn-lg text-white" style="background:#0d6efd;">Ir para Paradas</a>
   </div>
-  <p class="text-muted mt-2 mb-0">Busca todas as paradas do 2º turno (13:30-22:00) do dia atual.</p>
+  <p class="text-muted mt-2 mb-0">Busca todas as paradas do 2º turno (13:30-22:00) do dia selecionado.</p>
 </div>
 
 <div class="table-responsive">
@@ -44,7 +47,7 @@
         {% endfor %}
       {% else %}
         <tr>
-          <td colspan="9" class="text-center text-muted">Nenhum registro para hoje.</td>
+          <td colspan="9" class="text-center text-muted">Nenhum registro para a data selecionada.</td>
         </tr>
       {% endif %}
     </tbody>

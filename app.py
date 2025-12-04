@@ -2354,33 +2354,39 @@ def export_api_for_shift(shift_id: int, for_date: Optional[datetime.date] = None
     if not shift_row or not shift_row['start_1'] or not shift_row['end_1']:
         return 0
 
-    base_date = for_date or now_local().date()
+    shift_day = for_date or now_local().date()  # dia de início do turno
     try:
         start_t = datetime.datetime.strptime(shift_row['start_1'], '%H:%M').time()
         end_t = datetime.datetime.strptime(shift_row['end_1'], '%H:%M').time()
     except Exception:
         return 0
 
-    shift_start = datetime.datetime.combine(base_date, start_t)
-    shift_end = datetime.datetime.combine(base_date, end_t)
+    shift_start = datetime.datetime.combine(shift_day, start_t)
+    shift_end = datetime.datetime.combine(shift_day, end_t)
     windows = []
     if shift_end <= shift_start:
-        prev_day = base_date - datetime.timedelta(days=1)
-        # Janela do dia anterior até 23:59:59 e, depois, a janela do dia corrente até o fim do turno
-        windows.append((datetime.datetime.combine(prev_day, start_t), datetime.datetime.combine(base_date, datetime.time(0, 0))))
-        windows.append((datetime.datetime.combine(base_date, datetime.time(0, 0)), datetime.datetime.combine(base_date, end_t)))
+        next_day = shift_day + datetime.timedelta(days=1)
+        # Janela de 22:00-23:59 do dia selecionado e 00:00-05:00 do dia seguinte
+        windows.append((shift_start, datetime.datetime.combine(next_day, datetime.time(0, 0))))
+        windows.append((datetime.datetime.combine(next_day, datetime.time(0, 0)), datetime.datetime.combine(next_day, end_t)))
     else:
         windows.append((shift_start, shift_end))
 
     query_start = min(w[0] for w in windows)
     query_end = max(w[1] for w in windows)
-    # Inclui paradas iniciadas antes do inÃ­cio do turno mas no mesmo dia (ou dia anterior no caso de janela cruzando meia-noite).
-    query_lower_bound = min(query_start, datetime.datetime.combine(base_date, datetime.time.min))
+    # Inclui paradas iniciadas antes do início do turno; busca desde 00:00 do dia anterior para capturar paradas em andamento.
+    prev_midnight = datetime.datetime.combine(shift_day - datetime.timedelta(days=1), datetime.time.min)
+    query_lower_bound = min(query_start, prev_midnight)
 
     shift_name = shift_row['shift_name'] or 'TURNO'
     api_db = get_api_db()
     if clear_existing:
-        api_db.execute('DELETE FROM api WHERE data = ? AND turno = ?', (base_date.isoformat(), shift_name))
+        # Limpa tanto o dia base quanto o dia seguinte, caso o turno cruze a meia-noite.
+        days_to_clear = {shift_day}
+        if end_t <= start_t:
+            days_to_clear.add(shift_day + datetime.timedelta(days=1))
+        for day in days_to_clear:
+            api_db.execute('DELETE FROM api WHERE data = ? AND turno = ?', (day.isoformat(), shift_name))
 
     status_rows = db.execute(
         '''SELECT st.*, st.id AS status_id, l.number AS loom_number, r.code AS reason_code, r.description AS reason_desc
@@ -2396,6 +2402,10 @@ def export_api_for_shift(shift_id: int, for_date: Optional[datetime.date] = None
     ).fetchall()
 
     inserted = 0
+    now_dt = now_local()
+    now_dt_naive = now_dt.replace(tzinfo=None) if now_dt.tzinfo else now_dt
+    limit_future = shift_day >= now_dt_naive.date()
+
     for row in status_rows:
         stop_dt = parse_iso_naive(row['stop_time'])
         if not stop_dt:
@@ -2410,12 +2420,20 @@ def export_api_for_shift(shift_id: int, for_date: Optional[datetime.date] = None
         if not intervals:
             continue
         for interval_start, interval_end in intervals:
+            if limit_future:
+                # Não envia intervalos no futuro; corta no horário atual.
+                if now_dt_naive < interval_start:
+                    continue
+                interval_end = min(interval_end, now_dt_naive)
+                if interval_end <= interval_start:
+                    continue
+            record_date_iso = interval_start.date().isoformat()
             exists_cols = api_db.execute(
                 '''SELECT 1 FROM api
                    WHERE data = ? AND turno = ? AND tear = ? AND hora_inicio = ? AND hora_fim = ?
                      AND cod_motivo = ? AND motivo = ? AND responsavel = ?''',
                 (
-                    base_date.isoformat(),
+                    record_date_iso,
                     shift_name,
                     row['loom_number'],
                     interval_start.strftime('%H:%M'),
@@ -2434,7 +2452,7 @@ def export_api_for_shift(shift_id: int, for_date: Optional[datetime.date] = None
                     row['loom_number'],
                     interval_start.strftime('%H:%M'),
                     interval_end.strftime('%H:%M'),
-                    base_date.isoformat(),
+                    record_date_iso,
                     row['reason_code'],
                     row['reason_desc'] or '',
                     shift_name,
@@ -2561,42 +2579,57 @@ def enviar_banco_turno1():
         return redirect(url_for('dashboard'))
 
     today = now_local().date()
-    selected_date_str = today.isoformat()
+    selected_date_str = request.args.get('date') or request.form.get('date') or today.isoformat()
+    try:
+        selected_date = datetime.date.fromisoformat(selected_date_str)
+    except Exception:
+        selected_date = today
+        selected_date_str = today.isoformat()
 
     db = get_db()
     shift_type = db.execute('SELECT id, name FROM shift_types ORDER BY id LIMIT 1').fetchone()
     if not shift_type:
         flash('Tipo de turno não configurado.', 'warning')
         return redirect(url_for('dashboard'))
-    weekday_db = (today.weekday() + 1) % 7
+    weekday_db = (selected_date.weekday() + 1) % 7
     shift_row = db.execute(
-        'SELECT id FROM shifts WHERE shift_type_id = ? AND day = ? ORDER BY id LIMIT 1',
+        'SELECT id, start_1, end_1 FROM shifts WHERE shift_type_id = ? AND day = ? ORDER BY id LIMIT 1',
         (shift_type['id'], weekday_db),
     ).fetchone()
     if not shift_row:
-        flash('Turno não cadastrado para hoje.', 'warning')
+        flash('Turno não cadastrado para a data selecionada.', 'warning')
         return redirect(url_for('dashboard'))
 
     if request.method == 'POST':
-        inserted = export_api_for_shift(shift_row['id'], today, clear_existing=False)
+        inserted = export_api_for_shift(shift_row['id'], selected_date, clear_existing=False)
         if inserted == 0:
             flash('Nenhum registro novo para o 1º turno.', 'info')
         else:
             flash(f'{inserted} novo(s) registro(s) exportados para api.', 'success')
-        return redirect(url_for('enviar_banco_turno1'))
+        return redirect(url_for('enviar_banco_turno1', date=selected_date_str))
 
     api_db = get_api_db()
+    params = [selected_date_str, shift_type['name']]
+    where_clause = 'data = ? AND turno = ?'
+    # Se o turno cruza a meia-noite, traz também registros gravados no dia seguinte.
+    if datetime.datetime.strptime(shift_row['start_1'], '%H:%M').time() >= datetime.datetime.strptime(shift_row['end_1'], '%H:%M').time():
+        next_day = (selected_date + datetime.timedelta(days=1)).isoformat()
+        where_clause = '(data = ? OR data = ?) AND turno = ?'
+        params = [selected_date_str, next_day, shift_type['name']]
+
     rows = api_db.execute(
-        '''SELECT id_api, tear, hora_inicio, hora_fim, data, cod_motivo, motivo, turno, responsavel
+        f'''SELECT id_api, tear, hora_inicio, hora_fim, data, cod_motivo, motivo, turno, responsavel
            FROM api
-           WHERE data = ? AND turno = ?
-           ORDER BY id_api''',
-        (selected_date_str, shift_type['name']),
+           WHERE {where_clause}
+           ORDER BY data, id_api''',
+        params,
     ).fetchall()
 
+    today_iso = now_local().date().isoformat()
     return render_template(
         'enviar_banco_turno1.html',
         selected_date=selected_date_str,
+        today_iso=today_iso,
         api_rows=rows,
     )
 
@@ -2610,42 +2643,55 @@ def enviar_banco_turno3():
         return redirect(url_for('dashboard'))
 
     today = now_local().date()
-    selected_date_str = today.isoformat()
+    selected_date_str = request.args.get('date') or request.form.get('date') or today.isoformat()
+    try:
+        selected_date = datetime.date.fromisoformat(selected_date_str)
+    except Exception:
+        selected_date = today
+        selected_date_str = today.isoformat()
 
     db = get_db()
     shift_type = db.execute('SELECT id, name FROM shift_types ORDER BY id LIMIT 1 OFFSET 2').fetchone()
     if not shift_type:
         flash('Tipo de turno não configurado.', 'warning')
         return redirect(url_for('dashboard'))
-    weekday_db = (today.weekday() + 1) % 7
+    weekday_db = (selected_date.weekday() + 1) % 7
     shift_row = db.execute(
-        'SELECT id FROM shifts WHERE shift_type_id = ? AND day = ? ORDER BY id LIMIT 1',
+        'SELECT id, start_1, end_1 FROM shifts WHERE shift_type_id = ? AND day = ? ORDER BY id LIMIT 1',
         (shift_type['id'], weekday_db),
     ).fetchone()
     if not shift_row:
-        flash('Turno não cadastrado para hoje.', 'warning')
+        flash('Turno não cadastrado para a data selecionada.', 'warning')
         return redirect(url_for('dashboard'))
 
     if request.method == 'POST':
-        inserted = export_api_for_shift(shift_row['id'], today, clear_existing=False)
+        inserted = export_api_for_shift(shift_row['id'], selected_date, clear_existing=False)
         if inserted == 0:
             flash('Nenhum registro novo para o 3º turno.', 'info')
         else:
             flash(f'{inserted} novo(s) registro(s) exportados para api.', 'success')
-        return redirect(url_for('enviar_banco_turno3'))
+        return redirect(url_for('enviar_banco_turno3', date=selected_date_str))
 
     api_db = get_api_db()
+    params = [selected_date_str, shift_type['name']]
+    where_clause = 'data = ? AND turno = ?'
+    if datetime.datetime.strptime(shift_row['start_1'], '%H:%M').time() >= datetime.datetime.strptime(shift_row['end_1'], '%H:%M').time():
+        next_day = (selected_date + datetime.timedelta(days=1)).isoformat()
+        where_clause = '(data = ? OR data = ?) AND turno = ?'
+        params = [selected_date_str, next_day, shift_type['name']]
     rows = api_db.execute(
-        '''SELECT id_api, tear, hora_inicio, hora_fim, data, cod_motivo, motivo, turno, responsavel
+        f'''SELECT id_api, tear, hora_inicio, hora_fim, data, cod_motivo, motivo, turno, responsavel
            FROM api
-           WHERE data = ? AND turno = ?
-           ORDER BY id_api''',
-        (selected_date_str, shift_type['name']),
+           WHERE {where_clause}
+           ORDER BY data, id_api''',
+        params,
     ).fetchall()
 
+    today_iso = now_local().date().isoformat()
     return render_template(
         'enviar_banco_turno3.html',
         selected_date=selected_date_str,
+        today_iso=today_iso,
         api_rows=rows,
     )
 @app.route('/enviar-banco-turno2', methods=['GET', 'POST'])
@@ -2657,29 +2703,34 @@ def enviar_banco_turno2():
         return redirect(url_for('dashboard'))
 
     today = now_local().date()
-    selected_date_str = today.isoformat()
+    selected_date_str = request.args.get('date') or request.form.get('date') or today.isoformat()
+    try:
+        selected_date = datetime.date.fromisoformat(selected_date_str)
+    except Exception:
+        selected_date = today
+        selected_date_str = today.isoformat()
 
     db = get_db()
     shift_type = db.execute('SELECT id, name FROM shift_types ORDER BY id LIMIT 1 OFFSET 1').fetchone()
     if not shift_type:
         flash('Tipo de turno não configurado.', 'warning')
         return redirect(url_for('dashboard'))
-    weekday_db = (today.weekday() + 1) % 7
+    weekday_db = (selected_date.weekday() + 1) % 7
     shift_row = db.execute(
-        'SELECT id FROM shifts WHERE shift_type_id = ? AND day = ? ORDER BY id LIMIT 1',
+        'SELECT id, start_1, end_1 FROM shifts WHERE shift_type_id = ? AND day = ? ORDER BY id LIMIT 1',
         (shift_type['id'], weekday_db),
     ).fetchone()
     if not shift_row:
-        flash('Turno não cadastrado para hoje.', 'warning')
+        flash('Turno não cadastrado para a data selecionada.', 'warning')
         return redirect(url_for('dashboard'))
 
     if request.method == 'POST':
-        inserted = export_api_for_shift(shift_row['id'], today, clear_existing=False)
+        inserted = export_api_for_shift(shift_row['id'], selected_date, clear_existing=False)
         if inserted == 0:
             flash('Nenhum registro novo para o 2º turno.', 'info')
         else:
             flash(f'{inserted} novo(s) registro(s) exportados para api.', 'success')
-        return redirect(url_for('enviar_banco_turno2'))
+        return redirect(url_for('enviar_banco_turno2', date=selected_date_str))
 
     api_db = get_api_db()
     rows = api_db.execute(
@@ -2690,9 +2741,11 @@ def enviar_banco_turno2():
         (selected_date_str, shift_type['name']),
     ).fetchall()
 
+    today_iso = now_local().date().isoformat()
     return render_template(
         'enviar_banco_turno2.html',
         selected_date=selected_date_str,
+        today_iso=today_iso,
         api_rows=rows,
     )
     rows = api_db.execute(
